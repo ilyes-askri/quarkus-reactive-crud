@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+
+  mongodb_container:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - ./mongodb_data:/data/db
+#default username is admin and default password is pass
+  mongo-express:
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb_container
+      - ME_CONFIG_MONGODB_PORT=27017
+    depends_on:
+      - mongodb_container
+
+volumes:
+  mongodb_data:
