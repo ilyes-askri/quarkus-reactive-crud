@@ -1,14 +1,13 @@
 package org.acme.ressources;
 
+import io.smallrye.mutiny.Multi;
+import io.smallrye.mutiny.Uni;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.acme.entities.Person;
 import org.acme.repositories.PersonRepository;
 import org.bson.types.ObjectId;
-
-import java.net.URI;
-import java.net.URISyntaxException;
 
 
 @Path("api/v1/persons")
@@ -18,37 +17,41 @@ public class PersonResource {
     PersonRepository personRepository;
 
     @POST
-    public Response createPerson(Person person) throws URISyntaxException {
-        personRepository.persist(person);
-        return Response.created(new URI("/" + person.id)).build();
-    }
-    
-    @GET
-    @Path("/{id}")
-    public Response getPersonById(@PathParam("id") String id) {
-        Person person = personRepository.findById(new ObjectId(id));
-        return Response.ok(person).build();
+    @Consumes("application/json")
+    public Uni<Response> createPerson(Person person) {
+        return personRepository.persist(person)
+                .onItem().transformToUni(id -> Uni.createFrom().item(Response.ok().build()));
     }
 
-    //TODO: Needs to be paginated
     @GET
-    public Response getPersons() {
-        return Response.ok(personRepository.listAll()).build();
+    @Path("/{id}")
+    @Produces("application/json")
+    public Uni<Response> getPersonById(@PathParam("id") String id) {
+        return personRepository.findById(new ObjectId(id))
+                .onItem().transform(Response::ok)
+                .onItem().transform(Response.ResponseBuilder::build);
     }
 
     @PUT
     @Path("/{id}")
-    public Response updatePersonById(@PathParam("id") String id, Person person){
+    @Consumes("application/json")
+    public Uni<Response> updatePersonById(@PathParam("id") String id, Person person){
         person.id = new ObjectId(id);
-        personRepository.update(person);
-        return Response.ok(person).build();
+        return personRepository.update(person)
+                .onItem().transform(updatedPerson -> Response.ok(updatedPerson).build());
     }
 
     @DELETE
     @Path("/{id}")
-    public Response deletePersonById(@PathParam("id") String id){
-        personRepository.deleteById(new ObjectId(id));
-        return Response.noContent().build();
+    public Uni<Response> deletePersonById(@PathParam("id") String id){
+        return personRepository.deleteById(new ObjectId(id))
+                .onItem().transform(ignore -> Response.noContent().build());
     }
+
+    @GET
+   @Produces("application/json")
+   public Multi<Person> getPersons() {
+        return personRepository.mongoCollection().find();
+   }
 
 }
