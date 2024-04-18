@@ -43,3 +43,6 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 
 mongodb_data/WiredTiger.turtle
+ mongodb_data/journal/WiredTigerLog.0000000010
+ mongodb_data/diagnostic.data/metrics.interim
+ mongodb_data/WiredTiger.wt
