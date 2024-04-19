@@ -1,4 +1,4 @@
 quarkus:
   mongodb:
-    connection-string: mongodb://localhost:27017
+    connection-string: mongodb://root:password@localhost:27017/?authSource=admin
     database: Person
